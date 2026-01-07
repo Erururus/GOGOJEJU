@@ -1,6 +1,6 @@
 {
-  "name": "濟州島之旅",
-  "short_name": "濟州記帳",
+  "name": "GOGOJEJU",
+  "short_name": "GOGOJEJU",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f3f4f6",
@@ -18,4 +18,5 @@
       "type": "image/png"
     }
   ]
+
 }
