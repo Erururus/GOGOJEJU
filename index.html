@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
     <meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="濟州記帳">
+    <link rel="apple-touch-icon" href="icon.png">
+    
+    <link rel="manifest" href="manifest.json">
     <title>GOGOJEJU</title>
     
     <link rel="icon" type="image/png" href="icon.png" />
@@ -33,9 +39,17 @@
             height: 100%;
             width: 100%;
             position: fixed;
+            /* 防止 iOS選取文字 */
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        input, select, textarea { font-size: 16px !important; }
+        /* 允許輸入框選取文字 */
+        input, select, textarea { 
+            font-size: 16px !important; 
+            -webkit-user-select: auto;
+            user-select: auto;
+        }
 
         @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in-up { animation: fade-in-up 0.3s ease-out; }
@@ -45,9 +59,11 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-top: 1px solid rgba(255, 255, 255, 0.3);
+            /* 適配 iOS 底部橫條 */
             padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
         }
         
+        /* 適配 iOS 瀏海 */
         .safe-top {
             padding-top: env(safe-area-inset-top);
         }
@@ -96,7 +112,7 @@
         const formatDateTime24h = (isoString) => {
             if (!isoString) return '';
             const d = new Date(isoString);
-            if (isNaN(d.getTime())) return ''; // 防止無效日期
+            if (isNaN(d.getTime())) return '';
             const pad = (n) => n.toString().padStart(2, '0');
             return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
         };
@@ -125,44 +141,16 @@
             });
         };
 
-        const INITIAL_TRIP_DATA = {
-            flights: [],
-            hotels: [],
-            quickLinks: [
-                { label: "e-Arrival card", url: "https://www.e-arrivalcard.go.kr/portal/main/index.do", icon: "qr-code", color: "text-blue-500" },
-                { label: "行程Naver Map", url: "https://naver.me/GPlHgkhf", icon: "map", color: "text-green-500" },
-                { label: "店家Naver Map", url: "https://naver.me/5L7Gh8hQ", icon: "store", color: "text-orange-500" }
-            ]
-        };
-
+        const INITIAL_TRIP_DATA = { flights: [], hotels: [], quickLinks: [{ label: "e-Arrival card", url: "https://www.e-arrivalcard.go.kr/portal/main/index.do", icon: "qr-code", color: "text-blue-500" }, { label: "行程Naver Map", url: "https://naver.me/GPlHgkhf", icon: "map", color: "text-green-500" }, { label: "店家Naver Map", url: "https://naver.me/5L7Gh8hQ", icon: "store", color: "text-orange-500" }] };
         const INITIAL_ITINERARY = [];
         const INITIAL_MEMOS = [];
-
-        const CATEGORIES = [
-            { id: 'food', name: '食', color: 'bg-orange-600' }, 
-            { id: 'clothing', name: '衣', color: 'bg-violet-500' },
-            { id: 'housing', name: '住', color: 'bg-amber-400' }, 
-            { id: 'transport', name: '行', color: 'bg-green-600' },
-            { id: 'education', name: '育', color: 'bg-blue-500' }, 
-            { id: 'fun', name: '樂', color: 'bg-pink-500' },
-            { id: 'agent', name: '代', color: 'bg-stone-600' }, 
-            { id: 'gift', name: '禮', color: 'bg-rose-500' }, 
-            { id: 'other', name: '它', color: 'bg-slate-700' },
-        ];
-
+        const CATEGORIES = [{ id: 'food', name: '食', color: 'bg-orange-600' }, { id: 'clothing', name: '衣', color: 'bg-violet-500' }, { id: 'housing', name: '住', color: 'bg-amber-400' }, { id: 'transport', name: '行', color: 'bg-green-600' }, { id: 'education', name: '育', color: 'bg-blue-500' }, { id: 'fun', name: '樂', color: 'bg-pink-500' }, { id: 'agent', name: '代', color: 'bg-stone-600' }, { id: 'gift', name: '禮', color: 'bg-rose-500' }, { id: 'other', name: '它', color: 'bg-slate-700' }];
         const PAYMENT_METHODS = ['信用卡', '韓幣現金', 'WOWPASS', '台灣Pay', 'LINE Pay', '台幣現金'];
         const PAYERS = ['汝', '沙', '守'];
 
         const HomeView = ({ headerImage, setHeaderImage, onExport, onImport, tripData }) => {
-            const handleHeaderUpload = async (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    try { const compressed = await resizeImage(file, 800); setHeaderImage(compressed); } 
-                    catch (error) { alert("圖片處理失敗"); }
-                }
-            };
+            const handleHeaderUpload = async (e) => { const file = e.target.files[0]; if (file) { try { const compressed = await resizeImage(file, 800); setHeaderImage(compressed); } catch (error) { alert("圖片處理失敗"); } } };
             const data = tripData || INITIAL_TRIP_DATA;
-
             return (
                 <div className="h-full flex flex-col overflow-y-auto no-scrollbar safe-top">
                     <div className="space-y-4 pb-28">
@@ -173,33 +161,10 @@
                             <label className="absolute bottom-3 right-3 bg-black/30 backdrop-blur-md p-2 rounded-full cursor-pointer hover:bg-black/50 transition-colors"><Icon name="camera" size={20} className="text-white" /><input type="file" accept="image/*" onChange={handleHeaderUpload} className="hidden" /></label>
                         </div>
                         <div className="px-4 space-y-4">
-                            <div className="grid grid-cols-3 gap-3">
-                                {data.quickLinks.map((link, i) => (
-                                    <a key={i} href={link.url} target="_blank" className="bg-white p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform">
-                                        <Icon name={link.icon} className={link.color} size={28} />
-                                        <span className={`${link.color} font-bold text-[11px] text-center leading-tight`}>{link.label}</span>
-                                    </a>
-                                ))}
-                            </div>
-                            <div className="bg-white rounded-2xl p-3 shadow-sm">
-                                <h3 className="font-bold text-gray-700 mb-2 flex items-center gap-2"><Icon name="plane" size={18} /> 航班資訊</h3>
-                                {(data.flights || []).length === 0 ? <div className="text-center py-4 text-gray-400 text-xs">尚無航班資料，請匯入 JSON</div> : <div className="space-y-2">{data.flights.map((f, i) => <div key={i} className="bg-gray-50 p-2.5 rounded-xl border border-gray-100"><div className="flex items-center gap-2 mb-1"><span className="text-xs font-bold px-2 py-0.5 rounded bg-gray-200 text-gray-800">{f.type}</span><span className="font-bold text-gray-700 text-sm">({f.code})</span><span className="text-sm text-gray-500">{f.date}</span></div><div className="text-gray-800 font-bold font-mono pl-1 text-sm">{f.detail}</div></div>)}</div>}
-                            </div>
-                            <div className="bg-white rounded-2xl p-3 shadow-sm">
-                                <h3 className="font-bold text-gray-700 mb-2 flex items-center gap-2"><Icon name="bed-double" size={18} /> 住宿資訊</h3>
-                                {(data.hotels || []).length === 0 ? <div className="text-center py-4 text-gray-400 text-xs">尚無住宿資料，請匯入 JSON</div> : <div className="space-y-2">{data.hotels.map((h, i) => <div key={i} className="bg-gray-50 p-2.5 rounded-xl border border-gray-100"><div className="flex items-center gap-2 mb-1"><span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 whitespace-nowrap">{h.date}</span><span className="font-bold text-gray-800 text-sm truncate">{h.name}</span></div><div className="flex justify-between items-end gap-2 pl-1"><div className="text-gray-500 text-[10px] leading-tight line-clamp-1 font-mono font-bold tracking-tight bg-gray-100 px-2 py-0.5 rounded">{h.address}</div><a href={h.map} target="_blank" className="text-green-500 text-[10px] font-bold flex items-center gap-1 shrink-0 whitespace-nowrap bg-white px-1.5 py-0.5 rounded border border-green-200 hover:bg-green-50"><Icon name="map-pin" size={10} /> Naver</a></div></div>)}</div>}
-                            </div>
-                            <div className="bg-white rounded-2xl p-4 shadow-sm mt-4">
-                                 <h3 className="font-bold text-gray-700 mb-3 flex items-center gap-2"><Icon name="database" size={18} /> 數據還原</h3>
-                                 <div className="flex gap-3">
-                                    <button onClick={onExport} className="flex-1 bg-gray-50 border border-gray-200 text-gray-600 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 active:bg-gray-100"><Icon name="download" size={14}/> 匯出備份</button>
-                                    <label className="flex-1 bg-gray-50 border border-gray-200 text-gray-600 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 active:bg-gray-100 cursor-pointer">
-                                        <Icon name="upload" size={14}/> 匯入行程
-                                        <input type="file" accept=".json" onChange={onImport} className="hidden" />
-                                    </label>
-                                 </div>
-                                 <p className="text-[10px] text-gray-400 mt-2 text-center">下載後，請匯入 JSON 檔以載入行程。</p>
-                            </div>
+                            <div className="grid grid-cols-3 gap-3">{data.quickLinks.map((link, i) => (<a key={i} href={link.url} target="_blank" className="bg-white p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform"><Icon name={link.icon} className={link.color} size={28} /><span className={`${link.color} font-bold text-[11px] text-center leading-tight`}>{link.label}</span></a>))}</div>
+                            <div className="bg-white rounded-2xl p-3 shadow-sm"><h3 className="font-bold text-gray-700 mb-2 flex items-center gap-2"><Icon name="plane" size={18} /> 航班資訊</h3>{(data.flights || []).length === 0 ? <div className="text-center py-4 text-gray-400 text-xs">尚無航班資料，請匯入 JSON</div> : <div className="space-y-2">{data.flights.map((f, i) => <div key={i} className="bg-gray-50 p-2.5 rounded-xl border border-gray-100"><div className="flex items-center gap-2 mb-1"><span className="text-xs font-bold px-2 py-0.5 rounded bg-gray-200 text-gray-800">{f.type}</span><span className="font-bold text-gray-700 text-sm">({f.code})</span><span className="text-sm text-gray-500">{f.date}</span></div><div className="text-gray-800 font-bold font-mono pl-1 text-sm">{f.detail}</div></div>)}</div>}</div>
+                            <div className="bg-white rounded-2xl p-3 shadow-sm"><h3 className="font-bold text-gray-700 mb-2 flex items-center gap-2"><Icon name="bed-double" size={18} /> 住宿資訊</h3>{(data.hotels || []).length === 0 ? <div className="text-center py-4 text-gray-400 text-xs">尚無住宿資料，請匯入 JSON</div> : <div className="space-y-2">{data.hotels.map((h, i) => <div key={i} className="bg-gray-50 p-2.5 rounded-xl border border-gray-100"><div className="flex items-center gap-2 mb-1"><span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 whitespace-nowrap">{h.date}</span><span className="font-bold text-gray-800 text-sm truncate">{h.name}</span></div><div className="flex justify-between items-end gap-2 pl-1"><div className="text-gray-500 text-[10px] leading-tight line-clamp-1 font-mono font-bold tracking-tight bg-gray-100 px-2 py-0.5 rounded">{h.address}</div><a href={h.map} target="_blank" className="text-green-500 text-[10px] font-bold flex items-center gap-1 shrink-0 whitespace-nowrap bg-white px-1.5 py-0.5 rounded border border-green-200 hover:bg-green-50"><Icon name="map-pin" size={10} /> Naver</a></div></div>)}</div>}</div>
+                            <div className="bg-white rounded-2xl p-4 shadow-sm mt-4"><h3 className="font-bold text-gray-700 mb-3 flex items-center gap-2"><Icon name="database" size={18} /> 數據還原</h3><div className="flex gap-3"><button onClick={onExport} className="flex-1 bg-gray-50 border border-gray-200 text-gray-600 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 active:bg-gray-100"><Icon name="download" size={14}/> 匯出備份</button><label className="flex-1 bg-gray-50 border border-gray-200 text-gray-600 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 active:bg-gray-100 cursor-pointer"><Icon name="upload" size={14}/> 匯入行程<input type="file" accept=".json" onChange={onImport} className="hidden" /></label></div><p className="text-[10px] text-gray-400 mt-2 text-center">下載後，請匯入 JSON 檔以載入行程。</p></div>
                         </div>
                     </div>
                 </div>
@@ -249,26 +214,12 @@
                     case 'spot': default: return { bg:'bg-blue-100', c:'text-blue-600', i:'map-pin' };
                 }
             };
-            const handleSave = (e) => {
-                e.preventDefault(); const form = e.target;
-                const combinedTime = `${form.hour.value}:${form.minute.value}`;
-                const newItem = { id: editingItem?.id || Date.now() + Math.random().toString(36).substr(2, 9), date: selectedDate, time: combinedTime, type: form.type.value, title: form.title.value, note: form.note.value };
-                setItineraryData(prev => editingItem?.id ? prev.map(i => i.id === newItem.id ? newItem : i) : [...prev, newItem]);
-                setEditingItem(null);
-            };
-            const exportItineraryCSV = () => {
-                const sortedData = [...safeItinerary].sort((a, b) => (a.date !== b.date) ? a.date.localeCompare(b.date) : a.time.localeCompare(b.time));
-                const csv = "\uFEFF日期,時間,類別,地點/項目,備註\n" + sortedData.map(item => `${item.date},${item.time},${item.type},${item.title},${item.note||''}`).join("\n");
-                const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = `JejuTrip_Itinerary.csv`; link.click();
-            };
+            const handleSave = (e) => { e.preventDefault(); const form = e.target; const combinedTime = `${form.hour.value}:${form.minute.value}`; const newItem = { id: editingItem?.id || Date.now() + Math.random().toString(36).substr(2, 9), date: selectedDate, time: combinedTime, type: form.type.value, title: form.title.value, note: form.note.value }; setItineraryData(prev => editingItem?.id ? prev.map(i => i.id === newItem.id ? newItem : i) : [...prev, newItem]); setEditingItem(null); };
+            const exportItineraryCSV = () => { const sortedData = [...safeItinerary].sort((a, b) => (a.date !== b.date) ? a.date.localeCompare(b.date) : a.time.localeCompare(b.time)); const csv = "\uFEFF日期,時間,類別,地點/項目,備註\n" + sortedData.map(item => `${item.date},${item.time},${item.type},${item.title},${item.note||''}`).join("\n"); const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = `JejuTrip_Itinerary.csv`; link.click(); };
 
             return (
                 <div className="h-full flex flex-col safe-top">
-                    <div className="bg-white/90 backdrop-blur-sm shadow-sm pt-4 pb-2 px-2 sticky top-0 z-20 shrink-0"><div className="flex overflow-x-auto no-scrollbar gap-3 px-2">{dates.map((d, i) => <button key={i} onClick={() => setSelectedDate(d.toISOString().split('T')[0])} className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-20 rounded-2xl transition-all ${d.toISOString().split('T')[0] === selectedDate ? 'bg-orange-400 text-white shadow-md scale-105' : 'bg-gray-50 text-gray-400'}`}>
-                        <span className={`text-[10px] font-bold ${d.toISOString().split('T')[0] === selectedDate ? 'text-orange-100' : 'text-gray-400'}`}>DAY {i+1}</span>
-                        <span className="text-lg font-bold leading-none my-0.5">{d.getMonth()+1}/{d.getDate()}</span>
-                        <span className="text-[10px] font-medium tracking-wider">{weekDays[d.getDay()]}</span>
-                    </button>)}</div></div>
+                    <div className="bg-white/90 backdrop-blur-sm shadow-sm pt-4 pb-2 px-2 sticky top-0 z-20 shrink-0"><div className="flex overflow-x-auto no-scrollbar gap-3 px-2">{dates.map((d, i) => <button key={i} onClick={() => setSelectedDate(d.toISOString().split('T')[0])} className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-20 rounded-2xl transition-all ${d.toISOString().split('T')[0] === selectedDate ? 'bg-orange-400 text-white shadow-md scale-105' : 'bg-gray-50 text-gray-400'}`}><span className={`text-[10px] font-bold ${d.toISOString().split('T')[0] === selectedDate ? 'text-orange-100' : 'text-gray-400'}`}>DAY {i+1}</span><span className="text-lg font-bold leading-none my-0.5">{d.getMonth()+1}/{d.getDate()}</span><span className="text-[10px] font-medium tracking-wider">{weekDays[d.getDay()]}</span></button>)}</div></div>
                     <div className="p-4 flex-1 overflow-y-auto pb-28">
                         <div className="bg-white border border-blue-100 rounded-2xl p-3 shadow-sm mb-4 flex items-center gap-4"><div className="flex items-center gap-2 pl-2"><Icon name={weather.code > 3 ? "cloud-rain" : "cloud-sun"} size={32} className="text-blue-500" /><span className="text-3xl font-bold text-gray-800 tracking-tight">{weather.temp}°</span></div><div className="w-px h-8 bg-gray-100"></div><div className="flex-1 flex flex-col justify-center gap-0.5 text-xs text-gray-500"><div className="flex items-center gap-1 font-bold text-gray-700"><Icon name="map-pin" size={10} className="text-orange-400"/> {weather.location}</div><div>H:{weather.max}° L:{weather.min}°</div><div className="flex items-center gap-2"><span>體感 {weather.feels}°</span><span className="text-gray-200">|</span><span className="flex items-center gap-1"><Icon name="droplets" size={10} className="text-blue-300"/> {weather.humidity}%</span></div></div></div>
                         <div className="flex justify-between items-center mb-4"><h3 className="font-bold text-gray-700">行程總覽</h3><div className="flex gap-2"><button onClick={exportItineraryCSV} className="text-xs px-3 py-1 rounded-full border bg-white text-gray-500 flex items-center gap-1 active:scale-95"><Icon name="file-down" size={14} /> 匯出</button><button onClick={() => setIsEditMode(!isEditMode)} className={`text-xs px-3 py-1 rounded-full border ${isEditMode ? 'bg-orange-400 text-white' : 'bg-white text-gray-500'}`}>{isEditMode ? '完成' : '編輯'}</button></div></div>
@@ -305,7 +256,6 @@
             const [rate, setRate] = useState(0.024); const [input, setInput] = useState("0"); const [mode, setMode] = useState("KRW"); 
             const [showRateModal, setShowRateModal] = useState(false); const [newRate, setNewRate] = useState(rate);
             const [prevValue, setPrevValue] = useState(null); const [op, setOp] = useState(null); const [waiting, setWaiting] = useState(false);
-
             const calculate = (val) => { if(val==="")return"0"; return mode==="KRW"?(parseFloat(val)*rate).toFixed(0):(parseFloat(val)/rate).toFixed(0); };
             const handleNum = (n) => { if(waiting){setInput(String(n));setWaiting(false);}else{setInput(prev=>prev==="0"?String(n):prev+n);} };
             const handleOp = (nextOp) => { const current=parseFloat(input); if(prevValue!=null){let res=current; if(op==='+')res=prevValue+current; if(op==='-')res=prevValue-current; if(op==='×')res=prevValue*current; if(op==='÷')res=prevValue/current; setInput(String(res)); setPrevValue(res);}else{setPrevValue(current);} setOp(nextOp); setWaiting(true); };
@@ -314,10 +264,8 @@
             const handleBS = () => { if(waiting)return; setInput(prev=>prev.length>1?prev.slice(0,-1):"0"); };
             const getHistoryDisplay = () => op&&prevValue!=null ? `${prevValue} ${op}` : "";
             const saveRate = () => { setRate(parseFloat(newRate)); setShowRateModal(false); };
-
             const btnClass = "h-16 rounded-2xl font-bold text-xl shadow-sm active:scale-95 transition-transform flex items-center justify-center";
             const numBtn = `${btnClass} bg-white text-gray-700`; const opBtn = `${btnClass} bg-orange-50 text-orange-500`; const eqBtn = `${btnClass} bg-orange-400 text-white row-span-2 shadow-md`;
-
             return (
                 <div className="h-full flex flex-col p-4 bg-gray-50 pb-28 relative overflow-y-auto no-scrollbar safe-top">
                     <div className="flex justify-end mb-4"><button onClick={()=>setShowRateModal(true)} className="flex items-center gap-2 bg-white px-3 py-2 rounded-full shadow-sm text-xs font-bold text-gray-500 active:scale-95 transition-transform border border-gray-100"><Icon name="sliders-horizontal" size={14} className="text-orange-400" /><span>匯率: {rate}</span></button></div>
@@ -344,257 +292,58 @@
             const [editingExp, setEditingExp] = useState(null);
             const [form, setForm] = useState({ amount:'', currency:'KRW', category:'food', item:'', payment:'信用卡', payer:'汝', note:'' });
             
-            // 安全性修正：確保安全計算
             const safeExpenses = Array.isArray(expenses) ? expenses : [];
             const totalKRW = safeExpenses.filter(e => e && e.currency === 'KRW').reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
             const totalTWD = safeExpenses.filter(e => e && e.currency === 'TWD').reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-            
             const safeShoppingList = Array.isArray(shoppingList) ? shoppingList : [];
             const safeMemos = Array.isArray(paymentMemos) ? paymentMemos : [];
 
             const openModal = (exp = null) => { if(exp) { setEditingExp(exp); setForm(exp); } else { setEditingExp(null); setForm({ amount:'', currency:'KRW', category:'food', item:'', payment:'信用卡', payer:'汝', note:'' }); } setShowModal(true); };
-            const submit = () => { 
-                if(!form.amount || !form.item) return alert("請輸入金額與品項");
-                const newExp = { ...form, id: editingExp ? editingExp.id : Date.now() + Math.random().toString(36).substr(2, 9), timestamp: editingExp ? editingExp.timestamp : new Date().toISOString() };
-                setExpenses(prev => editingExp ? prev.map(e => e.id === newExp.id ? newExp : e) : [newExp, ...prev]); 
-                setShowModal(false); 
-            };
+            const submit = () => { if(!form.amount || !form.item) return alert("請輸入金額與品項"); const newExp = { ...form, id: editingExp ? editingExp.id : Date.now() + Math.random().toString(36).substr(2, 9), timestamp: editingExp ? editingExp.timestamp : new Date().toISOString() }; setExpenses(prev => editingExp ? prev.map(e => e.id === newExp.id ? newExp : e) : [newExp, ...prev]); setShowModal(false); };
             const deleteExpense = () => { if(confirm("確定要刪除這筆支出嗎？")) { setExpenses(prev => prev.filter(e => e.id !== editingExp.id)); setShowModal(false); } };
-            const exportExpensesCSV = () => {
-                const csv = "\uFEFF時間,分類,品項,金額,幣別,付款方式,付款人,備註\n" + 
-                safeExpenses.map(e => `${formatDateTime24h(e.timestamp)},${CATEGORIES.find(c=>c.id===e.category)?.name || '未分類'},${e.item},${e.amount},${e.currency},${e.payment},${e.payer},${e.note}`).join("\n");
-                const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = `JejuTrip_Expenses_${new Date().toISOString().slice(0,10)}.csv`; link.click();
-            };
+            const exportExpensesCSV = () => { const csv = "\uFEFF時間,分類,品項,金額,幣別,付款方式,付款人,備註\n" + safeExpenses.map(e => `${formatDateTime24h(e.timestamp)},${CATEGORIES.find(c=>c.id===e.category)?.name || '未分類'},${e.item},${e.amount},${e.currency},${e.payment},${e.payer},${e.note}`).join("\n"); const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = `JejuTrip_Expenses_${new Date().toISOString().slice(0,10)}.csv`; link.click(); };
             const formatMoney = (amount) => Number(amount).toLocaleString();
-
+            
             const [showWishModal, setShowWishModal] = useState(false);
             const [wishForm, setWishForm] = useState({ name: '', image: null });
-            const addWishItem = () => {
-                if(!wishForm.name) return;
-                setShoppingList(prev => [...prev, { id: Date.now() + Math.random().toString(36).substr(2, 9), name: wishForm.name, image: wishForm.image, bought: false }]);
-                setShowWishModal(false); setWishForm({ name: '', image: null });
-            };
-
+            const addWishItem = () => { if(!wishForm.name) return; setShoppingList(prev => [...prev, { id: Date.now() + Math.random().toString(36).substr(2, 9), name: wishForm.name, image: wishForm.image, bought: false }]); setShowWishModal(false); setWishForm({ name: '', image: null }); };
             const deleteWishItem = (id) => { if(confirm("移除此項目？")) setShoppingList(prev => prev.filter(item => item.id !== id)); };
-            const handleImageUpload = async (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    try { const compressed = await resizeImage(file); setWishForm(prev => ({ ...prev, image: compressed })); } 
-                    catch (error) { alert("圖片處理失敗，請重試"); }
-                }
-            };
+            const handleImageUpload = async (e) => { const file = e.target.files[0]; if (file) { try { const compressed = await resizeImage(file); setWishForm(prev => ({ ...prev, image: compressed })); } catch (error) { alert("圖片處理失敗，請重試"); } } };
             
             const [showMemoModal, setShowMemoModal] = useState(false);
             const [memoForm, setMemoForm] = useState({ id: null, title: '', content: '', image: null });
             const openMemoModal = (memo = null) => { if (memo) setMemoForm(memo); else setMemoForm({ id: null, title: '', content: '', image: null }); setShowMemoModal(true); };
-            const submitMemo = () => {
-                if (!memoForm.title) return alert("請輸入標題");
-                const newMemo = { ...memoForm, id: memoForm.id || Date.now() + Math.random().toString(36).substr(2, 9) };
-                setPaymentMemos(prev => memoForm.id ? prev.map(m => m.id === newMemo.id ? newMemo : m) : [newMemo, ...prev]);
-                setShowMemoModal(false);
-            };
+            const submitMemo = () => { if (!memoForm.title) return alert("請輸入標題"); const newMemo = { ...memoForm, id: memoForm.id || Date.now() + Math.random().toString(36).substr(2, 9) }; setPaymentMemos(prev => memoForm.id ? prev.map(m => m.id === newMemo.id ? newMemo : m) : [newMemo, ...prev]); setShowMemoModal(false); };
             const deleteMemo = () => { if (confirm("確定刪除此筆記？")) { setPaymentMemos(prev => prev.filter(m => m.id !== memoForm.id)); setShowMemoModal(false); } };
-            const moveMemo = (index, direction) => {
-                const newMemos = [...safeMemos];
-                if (direction === -1 && index > 0) { [newMemos[index], newMemos[index - 1]] = [newMemos[index - 1], newMemos[index]]; } 
-                else if (direction === 1 && index < newMemos.length - 1) { [newMemos[index], newMemos[index + 1]] = [newMemos[index + 1], newMemos[index]]; }
-                setPaymentMemos(newMemos);
-            };
-            const handleMemoImageUpload = async (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    try { const compressed = await resizeImage(file); setMemoForm(prev => ({ ...prev, image: compressed })); } 
-                    catch (error) { alert("圖片處理失敗"); }
-                }
-            };
+            const moveMemo = (index, direction) => { const newMemos = [...safeMemos]; if (direction === -1 && index > 0) { [newMemos[index], newMemos[index - 1]] = [newMemos[index - 1], newMemos[index]]; } else if (direction === 1 && index < newMemos.length - 1) { [newMemos[index], newMemos[index + 1]] = [newMemos[index + 1], newMemos[index]]; } setPaymentMemos(newMemos); };
+            const handleMemoImageUpload = async (e) => { const file = e.target.files[0]; if (file) { try { const compressed = await resizeImage(file); setMemoForm(prev => ({ ...prev, image: compressed })); } catch (error) { alert("圖片處理失敗"); } } };
 
             return (
                 <div className="h-full flex flex-col bg-gray-50 pb-20 safe-top">
                     <div className="flex flex-col p-4 bg-gray-50 sticky top-0 z-10 gap-3">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-gray-800">記帳中心</h2>
-                            <div className="flex gap-2">
-                                {viewMode === 'expenses' && (
-                                    <button onClick={exportExpensesCSV} className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-500 shadow-sm"><Icon name="file-down" size={16}/></button>
-                                )}
-                                <button onClick={() => { if (viewMode === 'expenses') openModal(); else if (viewMode === 'wishlist') setShowWishModal(true); else openMemoModal(); }} className="w-8 h-8 flex items-center justify-center rounded-full bg-orange-400 text-white shadow-md"><Icon name="plus" size={18}/></button>
-                            </div>
-                        </div>
-                        <div className="flex bg-gray-200 p-1 rounded-xl">
-                            <button onClick={()=>setViewMode('expenses')} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode==='expenses' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'}`}>支出紀錄</button>
-                            <button onClick={()=>setViewMode('wishlist')} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode==='wishlist' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'}`}>購物清單</button>
-                            <button onClick={()=>setViewMode('memo')} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode==='memo' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'}`}>優惠筆記</button>
-                        </div>
+                        <div className="flex justify-between items-center"><h2 className="text-xl font-bold text-gray-800">記帳中心</h2><div className="flex gap-2">{viewMode === 'expenses' && (<button onClick={exportExpensesCSV} className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-500 shadow-sm"><Icon name="file-down" size={16}/></button>)}<button onClick={() => { if (viewMode === 'expenses') openModal(); else if (viewMode === 'wishlist') setShowWishModal(true); else openMemoModal(); }} className="w-8 h-8 flex items-center justify-center rounded-full bg-orange-400 text-white shadow-md"><Icon name="plus" size={18}/></button></div></div>
+                        <div className="flex bg-gray-200 p-1 rounded-xl"><button onClick={()=>setViewMode('expenses')} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode==='expenses' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'}`}>支出紀錄</button><button onClick={()=>setViewMode('wishlist')} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode==='wishlist' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'}`}>購物清單</button><button onClick={()=>setViewMode('memo')} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode==='memo' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'}`}>優惠筆記</button></div>
                     </div>
-
                     {viewMode === 'expenses' && (
                         <div className="flex-1 flex flex-col overflow-y-auto pb-28">
-                            <div className="px-4 grid grid-cols-2 gap-3 mb-4 shrink-0">
-                                <div className="bg-white p-4 rounded-xl shadow-sm border-b-4 border-orange-400"><div className="text-xs text-gray-500 mb-1">總支出 (韓元)</div><div className="text-2xl font-bold text-gray-800 tracking-tight">{formatMoney(totalKRW)}</div></div>
-                                <div className="bg-white p-4 rounded-xl shadow-sm border-b-4 border-orange-400"><div className="text-xs text-gray-500 mb-1">總支出 (台幣)</div><div className="text-2xl font-bold text-gray-800 tracking-tight">{formatMoney(totalTWD)}</div></div>
-                            </div>
-                            <div className="px-4 space-y-3">
-                                {safeExpenses.length===0 && (
-                                    <div className="flex flex-col items-center justify-center py-10 text-gray-300">
-                                        <Icon name="receipt" size={48} strokeWidth={1.5} />
-                                        <span className="text-sm mt-2">還沒有記帳喔，按 + 新增</span>
-                                    </div>
-                                )}
-                                {safeExpenses.map(e => { 
-                                    if (!e) return null; // 防呆
-                                    const cat = CATEGORIES.find(c=>c.id===e.category) || CATEGORIES[0];
-                                    const dateObj = new Date(e.timestamp);
-                                    const dateStr = !isNaN(dateObj.getTime()) ? `${(dateObj.getMonth()+1)}/${dateObj.getDate()}` : '--/--';
-                                    return (
-                                        <div key={e.id} className="bg-white p-3 rounded-xl shadow-sm relative active:scale-[0.99] transition-transform flex flex-col gap-1 cursor-pointer" onClick={() => openModal(e)}>
-                                            <div className="flex justify-between items-start">
-                                                <div className="font-bold text-gray-800 text-base truncate pr-2 flex-1">{e.item}</div>
-                                                <div className="font-bold text-orange-500 text-lg whitespace-nowrap">{formatMoney(e.amount)} <span className="text-xs font-normal text-gray-400">{e.currency}</span></div>
-                                            </div>
-                                            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar text-[10px] text-gray-500">
-                                                <span className={`px-2 py-0.5 rounded-full text-white ${cat.color} shrink-0`}>{cat.name}</span>
-                                                <span className="shrink-0">{dateStr}</span>
-                                                <div className="w-px h-3 bg-gray-200 shrink-0"></div>
-                                                <span className="shrink-0">{e.payment}</span>
-                                                <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-500 rounded font-bold shrink-0">{e.payer}</span>
-                                                {e.note && <span className="text-gray-400 truncate max-w-[80px] italic">· {e.note}</span>}
-                                            </div>
-                                            <div className="absolute bottom-3 right-3 text-gray-300">
-                                                <Icon name="chevron-right" size={16}/>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
+                            <div className="px-4 grid grid-cols-2 gap-3 mb-4 shrink-0"><div className="bg-white p-4 rounded-xl shadow-sm border-b-4 border-orange-400"><div className="text-xs text-gray-500 mb-1">總支出 (韓元)</div><div className="text-2xl font-bold text-gray-800 tracking-tight">{formatMoney(totalKRW)}</div></div><div className="bg-white p-4 rounded-xl shadow-sm border-b-4 border-orange-400"><div className="text-xs text-gray-500 mb-1">總支出 (台幣)</div><div className="text-2xl font-bold text-gray-800 tracking-tight">{formatMoney(totalTWD)}</div></div></div>
+                            <div className="px-4 space-y-3">{safeExpenses.length===0 && (<div className="flex flex-col items-center justify-center py-10 text-gray-300"><Icon name="receipt" size={48} strokeWidth={1.5} /><span className="text-sm mt-2">還沒有記帳喔，按 + 新增</span></div>)}{safeExpenses.map(e => { if (!e) return null; const cat = CATEGORIES.find(c=>c.id===e.category) || CATEGORIES[0]; const dateObj = new Date(e.timestamp); const dateStr = !isNaN(dateObj.getTime()) ? `${(dateObj.getMonth()+1)}/${dateObj.getDate()}` : '--/--'; return (<div key={e.id} className="bg-white p-3 rounded-xl shadow-sm relative active:scale-[0.99] transition-transform flex flex-col gap-1 cursor-pointer" onClick={() => openModal(e)}><div className="flex justify-between items-start"><div className="font-bold text-gray-800 text-base truncate pr-2 flex-1">{e.item}</div><div className="font-bold text-orange-500 text-lg whitespace-nowrap">{formatMoney(e.amount)} <span className="text-xs font-normal text-gray-400">{e.currency}</span></div></div><div className="flex items-center gap-2 overflow-x-auto no-scrollbar text-[10px] text-gray-500"><span className={`px-2 py-0.5 rounded-full text-white ${cat.color} shrink-0`}>{cat.name}</span><span className="shrink-0">{dateStr}</span><div className="w-px h-3 bg-gray-200 shrink-0"></div><span className="shrink-0">{e.payment}</span><span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-500 rounded font-bold shrink-0">{e.payer}</span>{e.note && <span className="text-gray-400 truncate max-w-[80px] italic">· {e.note}</span>}</div><div className="absolute bottom-3 right-3 text-gray-300"><Icon name="chevron-right" size={16}/></div></div>)})}</div>
                         </div>
                     )}
-
                     {viewMode === 'wishlist' && (
-                        <div className="px-4 grid grid-cols-2 gap-3 overflow-y-auto flex-1 content-start pb-28">
-                            {safeShoppingList.length === 0 && (
-                                <div className="col-span-2 flex flex-col items-center justify-center py-10 text-gray-300">
-                                    <Icon name="shopping-bag" size={48} strokeWidth={1.5} />
-                                    <span className="text-sm mt-2">購物清單是空的</span>
-                                </div>
-                            )}
-                            {safeShoppingList.map(item => (
-                                <div key={item.id} className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col relative">
-                                    <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden relative group">
-                                        {item.image ? (
-                                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <Icon name="image" size={32} className="text-gray-300" />
-                                        )}
-                                    </div>
-                                    <div className="px-3 py-2.5 flex items-center justify-between bg-white">
-                                        <div className="font-bold text-gray-800 text-sm truncate flex-1 pr-2">{item.name}</div>
-                                        <button onClick={() => deleteWishItem(item.id)} className="text-gray-300 hover:text-orange-400 p-1 -mr-1 rounded-full hover:bg-orange-50 transition-colors shrink-0">
-                                            <Icon name="trash-2" size={16}/>
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        <div className="px-4 grid grid-cols-2 gap-3 overflow-y-auto flex-1 content-start pb-28">{safeShoppingList.length === 0 && (<div className="col-span-2 flex flex-col items-center justify-center py-10 text-gray-300"><Icon name="shopping-bag" size={48} strokeWidth={1.5} /><span className="text-sm mt-2">購物清單是空的</span></div>)}{safeShoppingList.map(item => (<div key={item.id} className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col relative"><div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden relative group">{item.image ? (<img src={item.image} alt={item.name} className="w-full h-full object-cover" />) : (<Icon name="image" size={32} className="text-gray-300" />)}</div><div className="px-3 py-2.5 flex items-center justify-between bg-white"><div className="font-bold text-gray-800 text-sm truncate flex-1 pr-2">{item.name}</div><button onClick={() => deleteWishItem(item.id)} className="text-gray-300 hover:text-orange-400 p-1 -mr-1 rounded-full hover:bg-orange-50 transition-colors shrink-0"><Icon name="trash-2" size={16}/></button></div></div>))}</div>
                     )}
-
                     {viewMode === 'memo' && (
-                        <div className="px-4 space-y-4 overflow-y-auto flex-1 pb-28">
-                             {safeMemos.length === 0 && (
-                                <div className="flex flex-col items-center justify-center py-10 text-gray-300">
-                                    <Icon name="sticky-note" size={48} strokeWidth={1.5} />
-                                    <span className="text-sm mt-2">沒有筆記</span>
-                                </div>
-                             )}
-                             {safeMemos.map((memo, idx) => (
-                                 <div key={memo.id} onClick={() => openMemoModal(memo)} className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-yellow-400 active:scale-[0.99] transition-transform cursor-pointer relative group">
-                                     <div className="flex justify-between items-center mb-2 border-b pb-2 border-gray-100">
-                                        <div className="flex items-center gap-3">
-                                            {memo.image && <img src={memo.image} className="w-16 h-10 object-cover rounded-md border border-gray-200" />}
-                                            <h3 className="font-bold text-gray-800 text-lg">{memo.title}</h3>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {idx > 0 && <button onClick={(e) => { e.stopPropagation(); moveMemo(idx, -1); }} className="p-1 text-gray-300 hover:text-gray-500 hover:bg-gray-100 rounded"><Icon name="arrow-up" size={14} /></button>}
-                                            {idx < safeMemos.length - 1 && <button onClick={(e) => { e.stopPropagation(); moveMemo(idx, 1); }} className="p-1 text-gray-300 hover:text-gray-500 hover:bg-gray-100 rounded"><Icon name="arrow-down" size={14} /></button>}
-                                            <div className="w-px h-3 bg-gray-200 mx-1"></div>
-                                            <Icon name="edit-2" size={14} className="text-gray-300" />
-                                        </div>
-                                     </div>
-                                     <div className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed font-zen bg-gray-50 p-2 rounded-lg">{memo.content}</div>
-                                 </div>
-                             ))}
-                        </div>
+                        <div className="px-4 space-y-4 overflow-y-auto flex-1 pb-28">{safeMemos.length === 0 && (<div className="flex flex-col items-center justify-center py-10 text-gray-300"><Icon name="sticky-note" size={48} strokeWidth={1.5} /><span className="text-sm mt-2">沒有筆記</span></div>)}{safeMemos.map((memo, idx) => (<div key={memo.id} onClick={() => openMemoModal(memo)} className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-yellow-400 active:scale-[0.99] transition-transform cursor-pointer relative group"><div className="flex justify-between items-center mb-2 border-b pb-2 border-gray-100"><div className="flex items-center gap-3">{memo.image && <img src={memo.image} className="w-16 h-10 object-cover rounded-md border border-gray-200" />}<h3 className="font-bold text-gray-800 text-lg">{memo.title}</h3></div><div className="flex items-center gap-2">{idx > 0 && <button onClick={(e) => { e.stopPropagation(); moveMemo(idx, -1); }} className="p-1 text-gray-300 hover:text-gray-500 hover:bg-gray-100 rounded"><Icon name="arrow-up" size={14} /></button>}{idx < safeMemos.length - 1 && <button onClick={(e) => { e.stopPropagation(); moveMemo(idx, 1); }} className="p-1 text-gray-300 hover:text-gray-500 hover:bg-gray-100 rounded"><Icon name="arrow-down" size={14} /></button>}<div className="w-px h-3 bg-gray-200 mx-1"></div><Icon name="edit-2" size={14} className="text-gray-300" /></div></div><div className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed font-zen bg-gray-50 p-2 rounded-lg">{memo.content}</div></div>))}</div>
                     )}
-
                     {showModal && (
-                        <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center">
-                            <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 h-[85vh] sm:h-auto overflow-y-auto animate-fade-in-up flex flex-col">
-                                <div className="flex justify-between items-center mb-1"><h3 className="text-xl font-bold text-gray-800">新增支出</h3><button onClick={()=>setShowModal(false)} className="text-gray-400"><Icon name="x" size={24} /></button></div>
-                                <div className="text-xs text-gray-400 mb-6">記帳時間: {new Date().toLocaleString()}</div>
-                                <div className="space-y-5 flex-1">
-                                    <div className="flex gap-3">
-                                        <div className="flex-1"><label className="text-xs text-gray-500 mb-1 block">金額</label><input type="number" value={form.amount} onChange={e=>setForm({...form, amount:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 text-lg font-bold outline-none focus:border-orange-400" placeholder="0" autoFocus /></div>
-                                        <div className="w-24"><label className="text-xs text-gray-500 mb-1 block">幣別</label><select value={form.currency} onChange={e=>setForm({...form, currency:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 text-lg font-bold outline-none bg-white"><option value="KRW">KRW</option><option value="TWD">TWD</option></select></div>
-                                    </div>
-                                    <div><label className="text-xs text-gray-500 mb-1 block">品項</label><input type="text" value={form.item} onChange={e=>setForm({...form, item:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-orange-400" placeholder="例如: 黑豬肉燒烤" /></div>
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-2 block">分類</label>
-                                        <div className="flex flex-wrap gap-3">{CATEGORIES.map(c => <button key={c.id} onClick={()=>setForm({...form, category:c.id})} className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all shadow-sm ${form.category===c.id ? `${c.color} text-white scale-110` : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>{c.name}</button>)}</div>
-                                    </div>
-                                    <div><label className="text-xs text-gray-500 mb-2 block">付款方式</label><div className="flex flex-wrap gap-2">{PAYMENT_METHODS.map(p => <button key={p} onClick={()=>setForm({...form, payment:p})} className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors border ${form.payment===p ? 'border-orange-400 text-orange-400 bg-orange-50' : 'border-gray-100 bg-gray-50 text-gray-400'}`}>{p}</button>)}</div></div>
-                                    <div><label className="text-xs text-gray-500 mb-2 block">付款人</label><div className="flex gap-2">{PAYERS.map(p => <button key={p} onClick={()=>setForm({...form, payer:p})} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${form.payer===p ? 'bg-orange-400 text-white' : 'bg-gray-100 text-gray-400'}`}>{p}</button>)}</div></div>
-                                    <div><label className="text-xs text-gray-500 mb-1 block">備註</label><textarea value={form.note} onChange={e=>setForm({...form, note:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-orange-400 h-20 resize-none" placeholder="備註..." ></textarea></div>
-                                </div>
-                                <div className="mt-6 flex items-center justify-between">
-                                    {editingExp ? <button onClick={deleteExpense} className="flex items-center gap-1 text-red-400 px-4 py-3 rounded-xl hover:bg-red-50 transition-colors"><Icon name="trash-2" size={20} /> <span className="text-sm font-bold">刪除</span></button> : <div></div>}
-                                    <button onClick={submit} className="bg-orange-400 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-orange-200 active:scale-95 transition-transform flex items-center gap-2"><Icon name="save" size={18} /> {editingExp ? '更新記帳' : '新增記帳'}</button>
-                                </div>
-                            </div>
-                        </div>
+                        <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center"><div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 h-[85vh] sm:h-auto overflow-y-auto animate-fade-in-up flex flex-col"><div className="flex justify-between items-center mb-1"><h3 className="text-xl font-bold text-gray-800">新增支出</h3><button onClick={()=>setShowModal(false)} className="text-gray-400"><Icon name="x" size={24} /></button></div><div className="text-xs text-gray-400 mb-6">記帳時間: {new Date().toLocaleString()}</div><div className="space-y-5 flex-1"><div className="flex gap-3"><div className="flex-1"><label className="text-xs text-gray-500 mb-1 block">金額</label><input type="number" value={form.amount} onChange={e=>setForm({...form, amount:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 text-lg font-bold outline-none focus:border-orange-400" placeholder="0" autoFocus /></div><div className="w-24"><label className="text-xs text-gray-500 mb-1 block">幣別</label><select value={form.currency} onChange={e=>setForm({...form, currency:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 text-lg font-bold outline-none bg-white"><option value="KRW">KRW</option><option value="TWD">TWD</option></select></div></div><div><label className="text-xs text-gray-500 mb-1 block">品項</label><input type="text" value={form.item} onChange={e=>setForm({...form, item:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-orange-400" placeholder="例如: 黑豬肉燒烤" /></div><div><label className="text-xs text-gray-500 mb-2 block">分類</label><div className="flex flex-wrap gap-3">{CATEGORIES.map(c => <button key={c.id} onClick={()=>setForm({...form, category:c.id})} className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all shadow-sm ${form.category===c.id ? `${c.color} text-white scale-110` : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>{c.name}</button>)}</div></div><div><label className="text-xs text-gray-500 mb-2 block">付款方式</label><div className="flex flex-wrap gap-2">{PAYMENT_METHODS.map(p => <button key={p} onClick={()=>setForm({...form, payment:p})} className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors border ${form.payment===p ? 'border-orange-400 text-orange-400 bg-orange-50' : 'border-gray-100 bg-gray-50 text-gray-400'}`}>{p}</button>)}</div></div><div><label className="text-xs text-gray-500 mb-2 block">付款人</label><div className="flex gap-2">{PAYERS.map(p => <button key={p} onClick={()=>setForm({...form, payer:p})} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${form.payer===p ? 'bg-orange-400 text-white' : 'bg-gray-100 text-gray-400'}`}>{p}</button>)}</div></div><div><label className="text-xs text-gray-500 mb-1 block">備註</label><textarea value={form.note} onChange={e=>setForm({...form, note:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-orange-400 h-20 resize-none" placeholder="備註..." ></textarea></div></div><div className="mt-6 flex items-center justify-between">{editingExp ? <button onClick={deleteExpense} className="flex items-center gap-1 text-red-400 px-4 py-3 rounded-xl hover:bg-red-50 transition-colors"><Icon name="trash-2" size={20} /> <span className="text-sm font-bold">刪除</span></button> : <div></div>}<button onClick={submit} className="bg-orange-400 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-orange-200 active:scale-95 transition-transform flex items-center gap-2"><Icon name="save" size={18} /> {editingExp ? '更新記帳' : '新增記帳'}</button></div></div></div>
                     )}
-
                     {showWishModal && (
-                        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-6">
-                            <div className="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-fade-in-up">
-                                <h3 className="font-bold text-lg text-center mb-4 text-gray-700">新增購物物品</h3>
-                                <div className="space-y-4">
-                                    <div><label className="text-xs text-gray-500 mb-1 block">物品名稱</label><input type="text" value={wishForm.name} onChange={e=>setWishForm({...wishForm, name:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-orange-400" placeholder="例如: 橘子巧克力..." autoFocus /></div>
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">照片 (點擊上傳)</label>
-                                        <div className="w-full aspect-video bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center relative overflow-hidden">
-                                            {wishForm.image ? <img src={wishForm.image} className="w-full h-full object-cover" /> : <div className="text-gray-400 flex flex-col items-center"><Icon name="camera" size={24} /><span className="text-xs mt-1">選擇照片</span></div>}
-                                            <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3 mt-6"><button onClick={() => setShowWishModal(false)} className="py-3 bg-gray-100 rounded-xl font-bold text-gray-500">取消</button><button onClick={addWishItem} className="py-3 bg-orange-400 rounded-xl font-bold text-white shadow-lg">新增</button></div>
-                            </div>
-                        </div>
+                        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-6"><div className="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-fade-in-up"><h3 className="font-bold text-lg text-center mb-4 text-gray-700">新增購物物品</h3><div className="space-y-4"><div><label className="text-xs text-gray-500 mb-1 block">物品名稱</label><input type="text" value={wishForm.name} onChange={e=>setWishForm({...wishForm, name:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-orange-400" placeholder="例如: 橘子巧克力..." autoFocus /></div><div><label className="text-xs text-gray-500 mb-1 block">照片 (點擊上傳)</label><div className="w-full aspect-video bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center relative overflow-hidden">{wishForm.image ? <img src={wishForm.image} className="w-full h-full object-cover" /> : <div className="text-gray-400 flex flex-col items-center"><Icon name="camera" size={24} /><span className="text-xs mt-1">選擇照片</span></div>}<input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" /></div></div></div><div className="grid grid-cols-2 gap-3 mt-6"><button onClick={() => setShowWishModal(false)} className="py-3 bg-gray-100 rounded-xl font-bold text-gray-500">取消</button><button onClick={addWishItem} className="py-3 bg-orange-400 rounded-xl font-bold text-white shadow-lg">新增</button></div></div></div>
                     )}
-
                     {showMemoModal && (
-                        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-6">
-                            <div className="bg-white w-full sm:max-w-md rounded-3xl p-6 shadow-2xl animate-fade-in-up">
-                                <h3 className="font-bold text-lg mb-4 text-center text-gray-700">{memoForm.id ? '編輯筆記' : '新增筆記'}</h3>
-                                <div className="space-y-4">
-                                    <div><label className="text-xs text-gray-500 mb-1 block">標題</label><input type="text" value={memoForm.title} onChange={e=>setMemoForm({...memoForm, title:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-yellow-400" placeholder="例如: 退稅規定" autoFocus /></div>
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">照片 (選填)</label>
-                                        <div className="w-full h-32 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center relative overflow-hidden">
-                                            {memoForm.image ? <img src={memoForm.image} className="w-full h-full object-cover" /> : <div className="text-gray-400 flex flex-col items-center"><Icon name="camera" size={24} /><span className="text-xs mt-1">選擇照片</span></div>}
-                                            <input type="file" accept="image/*" onChange={handleMemoImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
-                                        </div>
-                                    </div>
-                                    <div><label className="text-xs text-gray-500 mb-1 block">內容</label><textarea value={memoForm.content} onChange={e=>setMemoForm({...memoForm, content:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 h-40 outline-none focus:border-yellow-400 resize-none font-zen text-sm" placeholder="輸入內容..."></textarea></div>
-                                </div>
-                                <div className="mt-6 flex items-center justify-between">
-                                    {memoForm.id ? <button onClick={deleteMemo} className="flex items-center gap-1 text-red-400 px-4 py-3 rounded-xl hover:bg-red-50 transition-colors"><Icon name="trash-2" size={20} /> 刪除</button> : <div></div>}
-                                    <div className="flex gap-2">
-                                        <button onClick={() => setShowMemoModal(false)} className="py-3 px-6 bg-gray-100 rounded-xl font-bold text-gray-500">取消</button>
-                                        <button onClick={submitMemo} className="py-3 px-6 bg-yellow-400 rounded-xl font-bold text-white shadow-md">儲存</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-6"><div className="bg-white w-full sm:max-w-md rounded-3xl p-6 shadow-2xl animate-fade-in-up"><h3 className="font-bold text-lg mb-4 text-center text-gray-700">{memoForm.id ? '編輯筆記' : '新增筆記'}</h3><div className="space-y-4"><div><label className="text-xs text-gray-500 mb-1 block">標題</label><input type="text" value={memoForm.title} onChange={e=>setMemoForm({...memoForm, title:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-yellow-400" placeholder="例如: 退稅規定" autoFocus /></div><div><label className="text-xs text-gray-500 mb-1 block">照片 (選填)</label><div className="w-full h-32 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center relative overflow-hidden">{memoForm.image ? <img src={memoForm.image} className="w-full h-full object-cover" /> : <div className="text-gray-400 flex flex-col items-center"><Icon name="camera" size={24} /><span className="text-xs mt-1">選擇照片</span></div>}<input type="file" accept="image/*" onChange={handleMemoImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" /></div></div><div><label className="text-xs text-gray-500 mb-1 block">內容</label><textarea value={memoForm.content} onChange={e=>setMemoForm({...memoForm, content:e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 h-40 outline-none focus:border-yellow-400 resize-none font-zen text-sm" placeholder="輸入內容..."></textarea></div></div><div className="mt-6 flex items-center justify-between">{memoForm.id ? <button onClick={deleteMemo} className="flex items-center gap-1 text-red-400 px-4 py-3 rounded-xl hover:bg-red-50 transition-colors"><Icon name="trash-2" size={20} /> 刪除</button> : <div></div>}<div className="flex gap-2"><button onClick={() => setShowMemoModal(false)} className="py-3 px-6 bg-gray-100 rounded-xl font-bold text-gray-500">取消</button><button onClick={submitMemo} className="py-3 px-6 bg-yellow-400 rounded-xl font-bold text-white shadow-md">儲存</button></div></div></div></div>
                     )}
                 </div>
             );
@@ -602,16 +351,7 @@
 
         const App = () => {
             const [tab, setTab] = useState('home');
-            const safeParse = (key, defaultVal) => {
-                try { const saved = localStorage.getItem(key); 
-                    if (!saved || saved === 'undefined' || saved === 'null') return defaultVal;
-                    const parsed = JSON.parse(saved);
-                    if (Array.isArray(defaultVal) && !Array.isArray(parsed)) return defaultVal;
-                    return parsed; 
-                } catch (e) { 
-                    return defaultVal; 
-                }
-            };
+            const safeParse = (key, defaultVal) => { try { const saved = localStorage.getItem(key); if (!saved || saved === 'undefined' || saved === 'null') return defaultVal; const parsed = JSON.parse(saved); if (Array.isArray(defaultVal) && !Array.isArray(parsed)) return defaultVal; return parsed; } catch (e) { return defaultVal; } };
             
             const [tripData, setTripData] = useState(() => safeParse('jeju_trip_data', INITIAL_TRIP_DATA));
             const [itinerary, setItinerary] = useState(() => safeParse('jeju_iti_v13', INITIAL_ITINERARY));
@@ -620,10 +360,7 @@
             const [paymentMemos, setPaymentMemos] = useState(() => safeParse('jeju_memos_v13_4', INITIAL_MEMOS));
             const [headerImage, setHeaderImage] = useState(() => safeParse('jeju_header_img_v13_1', null));
             
-            const safeSave = (key, val) => {
-                try { localStorage.setItem(key, JSON.stringify(val)); } 
-                catch (e) { console.error("Storage Full", e); alert("儲存空間已滿，無法儲存變更。建議刪除一些照片或匯出備份。"); }
-            };
+            const safeSave = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { console.error("Storage Full", e); alert("儲存空間已滿，無法儲存變更。建議刪除一些照片或匯出備份。"); } };
 
             useEffect(() => safeSave('jeju_trip_data', tripData), [tripData]);
             useEffect(() => safeSave('jeju_iti_v13', itinerary), [itinerary]);
@@ -632,54 +369,20 @@
             useEffect(() => safeSave('jeju_memos_v13_4', paymentMemos), [paymentMemos]);
             useEffect(() => safeSave('jeju_header_img_v13_1', headerImage), [headerImage]);
 
-            const handleExport = () => {
-                const data = { tripData, itinerary, expenses, shoppingList, paymentMemos, headerImage };
-                const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = `JejuTrip_Backup_${new Date().toISOString().slice(0,10)}.json`;
-                link.click();
-            };
+            const handleExport = () => { const data = { tripData, itinerary, expenses, shoppingList, paymentMemos, headerImage }; const blob = new Blob([JSON.stringify(data)], { type: "application/json" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `JejuTrip_Backup_${new Date().toISOString().slice(0,10)}.json`; link.click(); };
+            const handleImport = (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (event) => { try { const data = JSON.parse(event.target.result); if(confirm("確定要匯入備份嗎？這將覆蓋目前的資料。")) { if(data.tripData) setTripData(data.tripData); if(data.itinerary) setItinerary(data.itinerary); if(data.expenses) setExpenses(data.expenses); if(data.shoppingList) setShoppingList(data.shoppingList); if(data.paymentMemos) setPaymentMemos(data.paymentMemos); if(data.headerImage) setHeaderImage(data.headerImage); alert("還原成功！"); } } catch (err) { alert("檔案格式錯誤，無法還原"); } }; reader.readAsText(file); };
 
-            const handleImport = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const data = JSON.parse(event.target.result);
-                        if(confirm("確定要匯入備份嗎？這將覆蓋目前的資料。")) {
-                            if(data.tripData) setTripData(data.tripData);
-                            if(data.itinerary) setItinerary(data.itinerary);
-                            if(data.expenses) setExpenses(data.expenses);
-                            if(data.shoppingList) setShoppingList(data.shoppingList);
-                            if(data.paymentMemos) setPaymentMemos(data.paymentMemos);
-                            if(data.headerImage) setHeaderImage(data.headerImage);
-                            alert("還原成功！");
-                        }
-                    } catch (err) { alert("檔案格式錯誤，無法還原"); }
-                };
-                reader.readAsText(file);
-            };
-
-            const tabs = [
-                {id:'home',i:'home',l:'首頁'},
-                {id:'iti',i:'calendar-days',l:'行程'},
-                {id:'conv',i:'calculator',l:'匯率'},
-                {id:'acc',i:'wallet',l:'記帳'}
-            ];
+            const tabs = [{id:'home',i:'home',l:'首頁'},{id:'iti',i:'calendar-days',l:'行程'},{id:'conv',i:'calculator',l:'匯率'},{id:'acc',i:'wallet',l:'記帳'}];
             
             return (
                 <ErrorBoundary>
                     <div className="max-w-md mx-auto h-[100dvh] w-full bg-gray-50 flex flex-col relative overflow-hidden shadow-2xl">
-                        
                         <div className="flex-1 overflow-hidden relative w-full">
                             {tab==='home'?<HomeView headerImage={headerImage} setHeaderImage={setHeaderImage} onExport={handleExport} onImport={handleImport} tripData={tripData} />:
                              tab==='iti'?<ItineraryView itineraryData={itinerary} setItineraryData={setItinerary} />:
                              tab==='conv'?<ConverterView />:
                              <AccountingView expenses={expenses} setExpenses={setExpenses} shoppingList={shoppingList} setShoppingList={setShoppingList} paymentMemos={paymentMemos} setPaymentMemos={setPaymentMemos} />}
                         </div>
-
                         <div className="absolute bottom-0 w-full z-40 glass-nav flex justify-around items-center pb-6 pt-3">
                             {tabs.map(t => <button key={t.id} onClick={()=>setTab(t.id)} className={`flex flex-col items-center gap-1 w-16 transition-colors ${tab===t.id?'text-orange-400':'text-gray-400'}`}><Icon name={t.i} size={24} className={tab===t.id?'stroke-2':'stroke-1'} /><span className="text-[10px] font-medium font-zen">{t.l}</span></button>)}
                         </div>
@@ -690,5 +393,4 @@
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
-
 </html>
